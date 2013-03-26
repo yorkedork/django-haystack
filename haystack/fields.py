@@ -9,7 +9,7 @@ class NOT_PROVIDED:
 
 
 DATETIME_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(T|\s+)(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2}).*?$')
-
+DATE_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})')
 
 # All the SearchFields variants.
 
@@ -300,10 +300,14 @@ class DateField(SearchField):
             return None
 
         if isinstance(value, basestring):
-            match = DATETIME_REGEX.search(value)
+            datetime_match = DATETIME_REGEX.search(value)
+            date_match = DATE_REGEX.search(value)
 
-            if match:
-                data = match.groupdict()
+            if datetime_match:
+                data = datetime_match.groupdict()
+                return datetime_safe.date(int(data['year']), int(data['month']), int(data['day']))
+            elif date_match:
+                data = date_match.groupdict()
                 return datetime_safe.date(int(data['year']), int(data['month']), int(data['day']))
             else:
                 raise SearchFieldError("Date provided to '%s' field doesn't appear to be a valid date string: '%s'" % (self.instance_name, value))
@@ -325,11 +329,15 @@ class DateTimeField(SearchField):
             return None
 
         if isinstance(value, basestring):
-            match = DATETIME_REGEX.search(value)
+            datetime_match = DATETIME_REGEX.search(value)
+            date_match = DATE_REGEX.search(value)
 
-            if match:
-                data = match.groupdict()
+            if datetime_match:
+                data = datetime_match.groupdict()
                 return datetime_safe.datetime(int(data['year']), int(data['month']), int(data['day']), int(data['hour']), int(data['minute']), int(data['second']))
+            elif date_match:
+                data = date_match.groupdict()
+                return datetime_safe.datetime(int(data['year']), int(data['month']), int(data['day']))
             else:
                 raise SearchFieldError("Datetime provided to '%s' field doesn't appear to be a valid datetime string: '%s'" % (self.instance_name, value))
 
